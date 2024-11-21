@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>TutorGo - Ver tus Tutorías</title>
+</head>
+<body>
+    <header>
+        <h1>TutorGo - Ver tus Tutorías</h1>
+        <nav>
+            <ul>
+                <li><a href="registrar_tutoria.html">Registrar Tutoría</a></li>
+                <li><a href="ver_tutorias.html">Ver tus Tutorías</a></li>
+                <li><a href="sugerir_tutoria.html">Sugerir Tutoría</a></li>
+                <li><a href="calendario.html">Calendario</a></li>
+                <li><a href="index.html">Inicio</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <div class="tutoria-container">
+            <h2>Tutorías Registradas</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Materia</th>
+                        <th>Tema</th>
+                        <th>Tutor</th>
+                        <th>Participantes</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tutoriasRegistradas"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getFirestore, getDocs, collection } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDeSaRhTuUCb7u2M4zK-yY7lCCjc-AIIKw",
+            authDomain: "tutorgo-64a6f.firebaseapp.com",
+            projectId: "tutorgo-64a6f",
+            storageBucket: "tutorgo-64a6f.firebasestorage.app",
+            messagingSenderId: "108547172978",
+            appId: "1:108547172978:web:296b32fab2a6ccbd44f0eb",
+            measurementId: "G-YQGWDYJYJS"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        async function cargarTutoriasRegistradas() {
+            const tutoriasRef = collection(db, 'tutoriasInscritas');
+            const snapshot = await getDocs(tutoriasRef);
+            const listaTutorias = document.getElementById('tutoriasRegistradas');
+
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${data.materia}</td>
+                    <td>${data.tema}</td>
+                    <td>${data.tutor}</td>
+                    <td>${data.participantes || 0}</td>
+                    <td><button class="verParticipantes">Ver Participantes</button></td>
+                `;
+                listaTutorias.appendChild(row);
+            });
+        }
+
+        cargarTutoriasRegistradas();
+    </script>
+</body>
+</html>

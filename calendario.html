@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <link href='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.1/main.min.css' rel='stylesheet' />
+    <title>TutorGo - Calendario</title>
+</head>
+<body>
+    <header>
+        <h1>TutorGo - Calendario de Tutorías</h1>
+        <nav>
+            <ul>
+                <li><a href="registrar_tutoria.html">Registrar Tutoría</a></li>
+                <li><a href="seleccionar_tutoria.html">Seleccionar Tutoría</a></li>
+                <li><a href="asignar_tutoria.html">Asignar Tutoría</a></li>
+                <li><a href="index.html">Inicio</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <div id='calendar'></div>
+    </main>
+
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.1/main.min.js'></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                events: [
+                    // Aquí puedes agregar eventos de tutorías
+                    { title: 'Tutoría 1', start: '2024-11-20' },
+                    { title: 'Tutoría 2', start: '2024-11-25' }
+                ]
+            });
+            calendar.render();
+        });
+    </script>
+</body>
+</html>

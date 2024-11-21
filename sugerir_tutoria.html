@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>TutorGo - Sugerir Tutoría</title>
+</head>
+<body>
+    <header>
+        <h1>TutorGo - Sugerir Tutoría</h1>
+        <nav>
+            <ul>
+                <li><a href="registrar_tutoria.html">Registrar Tutoría</a></li>
+                <li><a href="seleccionar_tutoria.html">Seleccionar Tutoría</a></li>
+                <li><a href="sugerir_tutoria.html">Sugerir Tutoría</a></li>
+                <li><a href="calendario.html">Calendario</a></li>
+                <li><a href="index.html">Inicio</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <form id="sugerirTutoriaForm">
+            <label for="materia">Materia:</label>
+            <input type="text" id="materia" name="materia" required>
+            <label for="tema">Tema:</label>
+            <input type="text" id="tema" name="tema" required>
+            <label for="observaciones">Observaciones:</label>
+            <textarea id="observaciones" name="observaciones"></textarea>
+            <button type="submit">Sugerir Tutoría</button>
+        </form>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        document.getElementById('sugerirTutoriaForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const materia = document.getElementById('materia').value;
+            const tema = document.getElementById('tema').value;
+            const observaciones = document.getElementById('observaciones').value;
+
+            try {
+                await setDoc(doc(db, 'sugerencias', `${materia}-${tema}`), {
+                    materia: materia,
+                    tema: tema,
+                    observaciones: observaciones
+                });
+                alert('Sugerencia de tutoría enviada con éxito');
+                window.location.href = 'logeado.htm'; // Redirigir a la página de logueado
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+    </script>
+</body>
+</html>
