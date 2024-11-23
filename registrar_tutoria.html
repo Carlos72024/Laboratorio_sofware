@@ -9,18 +9,9 @@
 <body>
     <header>
         <h1>TutorGo - Registrar Tutoría</h1>
-        <nav>
-            <ul>
-                <li><a href="registrar_tutoria.html">Registrar Tutoría</a></li>
-                <li><a href="ver_tutorias.html">Ver tus Tutorías</a></li>
-                <li><a href="sugerir_tutoria.html">Sugerir Tutoría</a></li>
-                <li><a href="calendario.html">Calendario</a></li>
-                <li><a href="index.html">Inicio</a></li>
-            </ul>
-        </nav>
     </header>
     <main>
-        <form id="registrarTutoriaForm">
+        <form id="registrarForm">
             <label for="materia">Materia:</label>
             <input type="text" id="materia" name="materia" required>
             <label for="tema">Tema:</label>
@@ -34,14 +25,14 @@
             <label for="observaciones">Observaciones:</label>
             <textarea id="observaciones" name="observaciones"></textarea>
             <label for="tutor">Tutor:</label>
-            <input type="text" id="tutor" name="tutor" readonly>
+            <input type="text" id="tutor" name="tutor" readonly> <!-- Campo tutor como readonly -->
             <button type="submit">Registrar Tutoría</button>
         </form>
     </main>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getFirestore, addDoc, collection } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDeSaRhTuUCb7u2M4zK-yY7lCCjc-AIIKw",
@@ -56,13 +47,14 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Recuperar el alias del usuario desde localStorage
-        const aliasUsuario = localStorage.getItem('usuarioAlias'); // Obtener el alias
-        document.getElementById('tutor').value = aliasUsuario; // Asignar al campo
+        // Obtener el alias del usuario logueado y mostrarlo en el campo tutor
+        document.addEventListener('DOMContentLoaded', function() {
+            const aliasUsuario = localStorage.getItem('usuarioAlias');
+            document.getElementById('tutor').value = aliasUsuario;
+        });
 
-        document.getElementById('registrarTutoriaForm').addEventListener('submit', async function(event) {
+        document.getElementById('registrarForm').addEventListener('submit', async function(event) {
             event.preventDefault();
-
             const materia = document.getElementById('materia').value;
             const tema = document.getElementById('tema').value;
             const fecha = document.getElementById('fecha').value;
@@ -72,20 +64,22 @@
             const tutor = document.getElementById('tutor').value;
 
             try {
-                await setDoc(doc(db, 'tutorias', `${materia}-${tema}`), {
+                await addDoc(collection(db, 'tutorias'), {
                     materia: materia,
                     tema: tema,
                     fecha: fecha,
                     hora: hora,
                     lugar: lugar,
                     observaciones: observaciones,
-                    tutor: tutor,
-                    participantes: 0 // Inicializa el contador de participantes
+                    tutor: tutor
                 });
                 alert('Tutoría registrada con éxito');
-                window.location.href = 'logeado.htm'; // Redirigir a la página de logueado
+                // Limpiar el formulario después de enviar, excepto el campo tutor
+                document.getElementById('registrarForm').reset();
+                document.getElementById('tutor').value = tutor;
             } catch (error) {
-                alert('Error al registrar la tutoría: ' + error.message);
+                console.error('Error al registrar la tutoría:', error);
+                alert('Error al registrar la tutoría');
             }
         });
     </script>

@@ -15,7 +15,7 @@
                 <li><a href="ver_tutorias.html">Ver tus Tutorías</a></li>
                 <li><a href="sugerir_tutoria.html">Sugerir Tutoría</a></li>
                 <li><a href="calendario.html">Calendario</a></li>
-                <li><a href="index.html">Inicio</a></li>
+                <li><a href="logeado.htm">Inicio</a></li>
             </ul>
         </nav>
     </header>
@@ -25,21 +25,25 @@
             <table>
                 <thead>
                     <tr>
+                        <th>Seleccionar</th>
                         <th>Materia</th>
                         <th>Tema</th>
+                        <th>Fecha</th>
+                        <th>Hora</th>
+                        <th>Lugar</th>
+                        <th>Observaciones</th>
                         <th>Tutor</th>
-                        <th>Participantes</th>
-                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="tutoriasRegistradas"></tbody>
             </table>
         </div>
+        <button id="eliminarTutorias">Eliminar Tutorías Seleccionadas</button>
     </main>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getFirestore, getDocs, collection } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getFirestore, getDocs, collection, query, where, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDeSaRhTuUCb7u2M4zK-yY7lCCjc-AIIKw",
@@ -54,26 +58,48 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        async function cargarTutoriasRegistradas() {
-            const tutoriasRef = collection(db, 'tutoriasInscritas');
-            const snapshot = await getDocs(tutoriasRef);
-            const listaTutorias = document.getElementById('tutoriasRegistradas');
+        document.addEventListener('DOMContentLoaded', async function() {
+            const userId = sessionStorage.getItem('userId'); // Obtener el ID del usuario logueado
+            if (userId) {
+                const tutoriasRef = collection(db, 'tutoriasInscritas');
+                const q = query(tutoriasRef, where('userId', '==', userId));
+                const querySnapshot = await getDocs(q);
+                const listaTutorias = document.getElementById('tutoriasRegistradas');
+                listaTutorias.innerHTML = ''; // Limpiar contenido previo
 
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${data.materia}</td>
-                    <td>${data.tema}</td>
-                    <td>${data.tutor}</td>
-                    <td>${data.participantes || 0}</td>
-                    <td><button class="verParticipantes">Ver Participantes</button></td>
-                `;
-                listaTutorias.appendChild(row);
-            });
-        }
+                if (querySnapshot.empty) {
+                    listaTutorias.innerHTML = '<tr><td colspan="8">No tienes tutorías registradas.</td></tr>';
+                } else {
+                    querySnapshot.forEach(doc => {
+                        const data = doc.data();
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td><input type="checkbox" value="${doc.id}" /></td>
+                            <td>${data.materia}</td>
+                            <td>${data.tema}</td>
+                            <td>${data.fecha}</td>
+                            <td>${data.hora}</td>
+                            <td>${data.lugar}</td>
+                            <td>${data.observaciones}</td>
+                            <td>${data.tutor}</td>
+                        `;
+                        listaTutorias.appendChild(row);
+                    });
+                }
+            } else {
+                window.location.href = 'login.html'; // Redirigir al usuario al login si no está logueado
+            }
+        });
 
-        cargarTutoriasRegistradas();
+        document.getElementById('eliminarTutorias').addEventListener('click', async function() {
+            const checkboxes = document.querySelectorAll('#tutoriasRegistradas input[type="checkbox"]:checked');
+            for (const checkbox of checkboxes) {
+                const docId = checkbox.value;
+                await deleteDoc(doc(db, 'tutoriasInscritas', docId));
+            }
+            location.reload(); // Recargar la página para actualizar la lista de tutorías
+        });
     </script>
 </body>
 </html>
+

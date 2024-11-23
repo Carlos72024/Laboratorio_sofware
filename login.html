@@ -48,6 +48,9 @@
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
 
+                // Guardar el ID del usuario en sessionStorage
+                sessionStorage.setItem('userId', user.uid);
+
                 // Obtener el alias del usuario desde Firestore
                 const aliasUsuario = await obtenerAliasUsuario(user.uid);
                 localStorage.setItem('usuarioAlias', aliasUsuario); // Guardar en localStorage
