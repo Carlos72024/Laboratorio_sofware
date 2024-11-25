@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
-    <link href='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.1/main.min.css' rel='stylesheet' />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.1/main.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.1/main.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.1/locales/es.min.js"></script>
     <title>TutorGo - Calendario</title>
 </head>
 <body>
@@ -12,31 +14,34 @@
         <h1>TutorGo - Calendario de Tutorías</h1>
         <nav>
             <ul>
-                <li><a href="registrar_tutoria.html">Registrar Tutoría</a></li>
-                <li><a href="seleccionar_tutoria.html">Seleccionar Tutoría</a></li>
-                <li><a href="asignar_tutoria.html">Asignar Tutoría</a></li>
                 <li><a href="index.html">Inicio</a></li>
+                <li><a href="registrar_tutoria.html">Registrar Tutoría</a></li>
+                <li><a href="ver_tutorias.html">Ver Tutorías</a></li>
+                <li><a href="sugerir_tutoria.html">Sugerir Tutoría</a></li>
             </ul>
         </nav>
     </header>
     <main>
-        <div id='calendar'></div>
+        <div id="calendar"></div>
     </main>
 
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.1/main.min.js'></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var calendarEl = document.getElementById('calendar');
-            var calendar = new FullCalendar.Calendar(calendarEl, {
+        document.addEventListener('DOMContentLoaded', function () {
+            const calendarEl = document.getElementById('calendar');
+            const calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
+                locale: 'es', // Configura el idioma
                 events: [
-                    // Aquí puedes agregar eventos de tutorías
-                    { title: 'Tutoría 1', start: '2024-11-20' },
-                    { title: 'Tutoría 2', start: '2024-11-25' }
-                ]
+                    { title: 'Tutoría Matemáticas', start: '2024-11-20', description: 'Álgebra y Cálculo' },
+                    { title: 'Tutoría Inglés', start: '2024-11-25', description: 'Gramática y conversación' },
+                ],
+                eventClick: function (info) {
+                    alert(`Título: ${info.event.title}\nDescripción: ${info.event.extendedProps.description}`);
+                }
             });
             calendar.render();
         });
     </script>
 </body>
 </html>
+    
