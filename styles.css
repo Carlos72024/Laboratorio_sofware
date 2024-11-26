@@ -236,11 +236,10 @@ tr:hover td {
 
 /* Logo */
 img.logo { 
-    float: right; 
-    margin-top: 10px; 
-    height: 130px; 
-    max-width: 8.5%; 
+    width: 105px; /* Ajuste de tamaño de imagen */
     height: auto;
+    margin-top: 10px;
+    float: right;
 }
 
 /* Botón fuera del contenedor */
