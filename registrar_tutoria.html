@@ -5,10 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
     <title>TutorGo - Registrar Tutoría</title>
+    <div id="usuarioNombre" style="float: left; margin-top: 10px;"></div>
+    <img src="logo.png" alt="Logo" class="logo"> <!-- Añadido el logo -->
 </head>
 <body>
     <header>
         <h1>TutorGo - Registrar Tutoría</h1>
+        
+
+        <nav class="Navbar">
+            <ul>
+                <li><a href="registrar_tutoria.html">Registrar Tutoría</a></li>
+                <li><a href="ver_tutorias.html">Ver tus Tutorías</a></li>
+                <li><a href="sugerir_tutoria.html">Sugerir Tutoría</a></li>
+                <li><a href="calendario.html">Calendario</a></li>
+                <li><a href="logeado.htm">Inicio</a></li>
+                <li><a href="#" id="cerrarSesion">Cerrar Sesión</a></li>
+            </ul>
+        </nav>
     </header>
     <main>
         <form id="registrarForm">
@@ -32,7 +46,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getFirestore, addDoc, collection } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getFirestore, addDoc, collection, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDeSaRhTuUCb7u2M4zK-yY7lCCjc-AIIKw",
@@ -46,41 +61,84 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
-        // Obtener el alias del usuario logueado y mostrarlo en el campo tutor
-        document.addEventListener('DOMContentLoaded', function() {
-            const aliasUsuario = localStorage.getItem('usuarioAlias');
-            document.getElementById('tutor').value = aliasUsuario;
+        document.addEventListener('DOMContentLoaded', () => {
+            const userId = sessionStorage.getItem('userId');
+            if (!userId) {
+                window.location.href = 'index.html'; // Redirigir a la página de inicio si no hay sesión activa
+            }
         });
 
-        document.getElementById('registrarForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            const materia = document.getElementById('materia').value;
-            const tema = document.getElementById('tema').value;
-            const fecha = document.getElementById('fecha').value;
-            const hora = document.getElementById('hora').value;
-            const lugar = document.getElementById('lugar').value;
-            const observaciones = document.getElementById('observaciones').value;
-            const tutor = document.getElementById('tutor').value;
+        // Mostrar el nombre del usuario logueado
+        const aliasUsuario = localStorage.getItem('usuarioAlias'); // Obtener el alias
+        const userId = sessionStorage.getItem('userId'); // Obtener el ID del usuario
+        document.getElementById('usuarioNombre').textContent = `Usuario: ${aliasUsuario}`; // Mostrar el nombre
 
-            try {
-                await addDoc(collection(db, 'tutorias'), {
-                    materia: materia,
-                    tema: tema,
-                    fecha: fecha,
-                    hora: hora,
-                    lugar: lugar,
-                    observaciones: observaciones,
-                    tutor: tutor
-                });
-                alert('Tutoría registrada con éxito');
-                // Limpiar el formulario después de enviar, excepto el campo tutor
-                document.getElementById('registrarForm').reset();
-                document.getElementById('tutor').value = tutor;
-            } catch (error) {
-                console.error('Error al registrar la tutoría:', error);
-                alert('Error al registrar la tutoría');
-            }
+        document.addEventListener('DOMContentLoaded', function() {
+            // Llenar campos con parámetros de la URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const materia = urlParams.get('materia');
+            const tema = urlParams.get('tema');
+            const sugerenciaId = urlParams.get('sugerenciaId');
+
+            if (materia) document.getElementById('materia').value = materia;
+            if (tema) document.getElementById('tema').value = tema;
+
+            document.getElementById('tutor').value = aliasUsuario;
+
+            document.getElementById('registrarForm').addEventListener('submit', async function(event) {
+                event.preventDefault();
+                const materia = document.getElementById('materia').value;
+                const tema = document.getElementById('tema').value;
+                const fecha = document.getElementById('fecha').value;
+                const hora = document.getElementById('hora').value;
+                const lugar = document.getElementById('lugar').value;
+                const observaciones = document.getElementById('observaciones').value;
+                const tutor = document.getElementById('tutor').value;
+                const userId = sessionStorage.getItem('userId'); // Obtener el userId del usuario logueado
+
+                try {
+                    await addDoc(collection(db, 'tutorias'), {
+                        materia: materia,
+                        tema: tema,
+                        fecha: fecha,
+                        hora: hora,
+                        lugar: lugar,
+                        observaciones: observaciones,
+                        tutor: tutor,
+                        userId: userId // Guardar el userId del usuario logueado
+                    });
+
+                    // Eliminar sugerencia de tutoría
+                    if (sugerenciaId) {
+                        await deleteDoc(doc(db, 'sugerencias', sugerenciaId));
+                    }
+
+                    alert('Tutoría registrada con éxito');
+                    // Limpiar el formulario después de enviar, excepto el campo tutor
+                    document.getElementById('registrarForm').reset();
+                    document.getElementById('tutor').value = tutor;
+                } catch (error) {
+                    console.error('Error al registrar la tutoría:', error);
+                    alert('Error al registrar la tutoría');
+                }
+            });
+
+            // Función para cerrar sesión
+            document.getElementById('cerrarSesion').addEventListener('click', async function() {
+                await signOut(auth);
+                sessionStorage.removeItem('userId');
+                localStorage.removeItem('usuarioAlias');
+                window.location.href = 'index.html'; // Redirigir a la página de inicio
+            });
+
+            // Prevenir acceso a las páginas protegidas desde el historial
+            window.addEventListener('popstate', function(event) {
+                if (!sessionStorage.getItem('userId')) {
+                    window.location.href = 'login.html'; // Redirigir al login si no hay sesión activa
+                }
+            });
         });
     </script>
 </body>

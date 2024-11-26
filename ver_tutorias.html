@@ -5,23 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
     <title>TutorGo - Ver tus Tutorías</title>
+    <div id="usuarioNombre" style="float: left; margin-top: 10px;"></div>
+    <img src="logo.png" alt="Logo" class="logo"> <!-- Añadido el logo -->
 </head>
 <body>
     <header>
         <h1>TutorGo - Ver tus Tutorías</h1>
-        <nav>
+        <nav class="Navbar">
             <ul>
                 <li><a href="registrar_tutoria.html">Registrar Tutoría</a></li>
                 <li><a href="ver_tutorias.html">Ver tus Tutorías</a></li>
                 <li><a href="sugerir_tutoria.html">Sugerir Tutoría</a></li>
                 <li><a href="calendario.html">Calendario</a></li>
                 <li><a href="logeado.htm">Inicio</a></li>
+                <li><a href="#" id="cerrarSesion">Cerrar Sesión</a></li> <!-- Agregado para cerrar sesión -->
             </ul>
         </nav>
     </header>
     <main>
         <div class="tutoria-container">
-            <h2>Tutorías Registradas</h2>
+            <h2>Tutorías</h2>
+            <select id="tipoTutorias">
+                <option value="inscritas">Tutorías Inscritas</option>
+                <option value="creadas">Tutorías Creadas</option>
+            </select>
             <table>
                 <thead>
                     <tr>
@@ -35,15 +42,27 @@
                         <th>Tutor</th>
                     </tr>
                 </thead>
-                <tbody id="tutoriasRegistradas"></tbody>
+                <tbody id="tutoriasListadas"></tbody>
             </table>
         </div>
-        <button id="eliminarTutorias">Eliminar Tutorías Seleccionadas</button>
+        <div class="button-container">
+            <button id="eliminarTutorias" class="button-outside">Eliminar Tutorías Seleccionadas</button>
+        </div>
+
+        <!-- Cuadro Modal -->
+        <div id="modalParticipantes" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Participantes Inscritos</h2>
+                <p id="totalParticipantes"></p>
+            </div>
+        </div>
     </main>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getFirestore, getDocs, collection, query, where, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDeSaRhTuUCb7u2M4zK-yY7lCCjc-AIIKw",
@@ -57,15 +76,44 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
         document.addEventListener('DOMContentLoaded', async function() {
-            const userId = sessionStorage.getItem('userId'); // Obtener el ID del usuario logueado
-            if (userId) {
-                const tutoriasRef = collection(db, 'tutoriasInscritas');
-                const q = query(tutoriasRef, where('userId', '==', userId));
-                const querySnapshot = await getDocs(q);
-                const listaTutorias = document.getElementById('tutoriasRegistradas');
+            // Mostrar el nombre del usuario
+            const aliasUsuario = localStorage.getItem('usuarioAlias');
+            const userId = sessionStorage.getItem('userId');
+            const usuarioNombre = document.getElementById('usuarioNombre');
+            if (usuarioNombre) {
+                usuarioNombre.textContent = `Usuario: ${aliasUsuario}`;
+            }
+
+            console.log("User ID:", userId);
+            if (!userId) {
+                window.location.href = 'login.html'; // Redirigir al usuario al login si no está logueado
+                return;
+            }
+
+            document.getElementById('tipoTutorias').addEventListener('change', function() {
+                cargarTutorias(this.value, userId);
+            });
+
+            async function cargarTutorias(tipo, userId) {
+                console.log("Cargar Tutorías Tipo:", tipo);
+                const listaTutorias = document.getElementById('tutoriasListadas');
                 listaTutorias.innerHTML = ''; // Limpiar contenido previo
+                let querySnapshot;
+
+                if (tipo === 'inscritas') {
+                    const tutoriasRef = collection(db, 'tutoriasInscritas');
+                    const q = query(tutoriasRef, where('userId', '==', userId));
+                    querySnapshot = await getDocs(q);
+                } else {
+                    const tutoriasRef = collection(db, 'tutorias');
+                    const q = query(tutoriasRef, where('userId', '==', userId)); // Utilizando el campo 'userId'
+                    querySnapshot = await getDocs(q);
+                }
+
+                console.log("Query Snapshot:", querySnapshot); // Agregado para depuración
 
                 if (querySnapshot.empty) {
                     listaTutorias.innerHTML = '<tr><td colspan="8">No tienes tutorías registradas.</td></tr>';
@@ -73,6 +121,7 @@
                     querySnapshot.forEach(doc => {
                         const data = doc.data();
                         const row = document.createElement('tr');
+                        row.setAttribute('data-id', doc.id);
                         row.innerHTML = `
                             <td><input type="checkbox" value="${doc.id}" /></td>
                             <td>${data.materia}</td>
@@ -84,22 +133,71 @@
                             <td>${data.tutor}</td>
                         `;
                         listaTutorias.appendChild(row);
+
+                        // Añadir evento click a cada fila
+                        row.addEventListener('click', async function() {
+                            const tutoriaId = this.getAttribute('data-id');
+                            console.log("Tutoria ID:", tutoriaId); // Debug: Ver ID de tutoría
+                            const inscritosRef = db.collection('tutoriasInscritas').where('tutoriaId', '==', tutoriaId);
+                            const inscritosSnapshot = await inscritosRef.get();
+                            console.log("Inscritos Snapshot:", inscritosSnapshot); // Debug: Ver snapshot de inscritos
+                            const totalParticipantes = document.getElementById('totalParticipantes');
+                            
+                            if (inscritosSnapshot.empty) {
+                                totalParticipantes.textContent = 'No hay participantes inscritos';
+                            } else {
+                                const count = inscritosSnapshot.size;
+                                totalParticipantes.textContent = `Total de Participantes: ${count}`;
+                            }
+
+                            // Mostrar modal
+                            const modal = document.getElementById('modalParticipantes');
+                            modal.style.display = 'block';
+                        });
                     });
                 }
-            } else {
-                window.location.href = 'login.html'; // Redirigir al usuario al login si no está logueado
             }
-        });
 
-        document.getElementById('eliminarTutorias').addEventListener('click', async function() {
-            const checkboxes = document.querySelectorAll('#tutoriasRegistradas input[type="checkbox"]:checked');
-            for (const checkbox of checkboxes) {
-                const docId = checkbox.value;
-                await deleteDoc(doc(db, 'tutoriasInscritas', docId));
+            cargarTutorias('inscritas', userId); // Cargar por defecto las tutorías inscritas al iniciar
+
+            document.getElementById('eliminarTutorias').addEventListener('click', async function() {
+                const tipo = document.getElementById('tipoTutorias').value;
+                const checkboxes = document.querySelectorAll('#tutoriasListadas input[type="checkbox"]:checked');
+                for (const checkbox of checkboxes) {
+                    const docId = checkbox.value;
+                    const collectionName = tipo === 'inscritas' ? 'tutoriasInscritas' : 'tutorias';
+                    await deleteDoc(doc(db, collectionName, docId));
+                }
+                cargarTutorias(tipo, userId); // Refrescar la lista de tutorías
+            });
+
+            // Función para cerrar sesión
+            document.getElementById('cerrarSesion').addEventListener('click', async function() {
+                try {
+                    await signOut(auth);
+                    sessionStorage.removeItem('userId');
+                    localStorage.removeItem('usuarioAlias');
+                    window.location.href = 'index.html'; // Redirigir a la página de inicio
+                } catch (error) {
+                    console.error('Error al cerrar sesión:', error);
+                    alert('Error al cerrar sesión');
+                }
+            });
+
+            // Modal: cerrar al hacer clic en (x)
+            const modal = document.getElementById('modalParticipantes');
+            const span = document.getElementsByClassName('close')[0];
+            span.onclick = function() {
+                modal.style.display = "none";
             }
-            location.reload(); // Recargar la página para actualizar la lista de tutorías
+
+            // Cerrar modal al hacer clic fuera del modal
+            window.onclick = function(event) {
+                if (event.target === modal) {
+                    modal.style.display = "none";
+                }
+            }
         });
     </script>
 </body>
 </html>
-

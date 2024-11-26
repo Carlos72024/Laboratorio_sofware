@@ -5,57 +5,136 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
     <title>TutorGo - Sugerir Tutoría</title>
+    <div id="usuarioNombre" style="float: left; margin-top: 10px;"></div>
+    <img src="logo.png" alt="Logo" class="logo"> <!-- Añadido el logo -->
 </head>
 <body>
     <header>
         <h1>TutorGo - Sugerir Tutoría</h1>
-        <nav>
+        
+        <nav class="Navbar">
             <ul>
                 <li><a href="registrar_tutoria.html">Registrar Tutoría</a></li>
-                <li><a href="seleccionar_tutoria.html">Seleccionar Tutoría</a></li>
                 <li><a href="sugerir_tutoria.html">Sugerir Tutoría</a></li>
                 <li><a href="calendario.html">Calendario</a></li>
-                <li><a href="index.html">Inicio</a></li>
+                <li><a href="logeado.htm">Inicio</a></li>
+                <li><a href="#" id="cerrarSesion">Cerrar Sesión</a></li>
             </ul>
-        </nav>
+        </nav class="Navbar">
     </header>
-    <main>
-        <form id="sugerirTutoriaForm">
-            <label for="materia">Materia:</label>
-            <input type="text" id="materia" name="materia" required>
-            <label for="tema">Tema:</label>
-            <input type="text" id="tema" name="tema" required>
-            <label for="observaciones">Observaciones:</label>
-            <textarea id="observaciones" name="observaciones"></textarea>
-            <button type="submit">Sugerir Tutoría</button>
-        </form>
+    <main class="container">
+        <div class="form-container">
+            <h2>Registrar Sugerencia de Tutoría</h2>
+            <form id="sugerirForm">
+                <label for="materia">Materia:</label>
+                <input type="text" id="materia" name="materia" required>
+                <label for="tema">Tema:</label>
+                <input type="text" id="tema" name="tema" required>
+                <label for="descripcion">Descripción:</label>
+                <textarea id="descripcion" name="descripcion" required></textarea>
+                <button type="submit">Sugerir Tutoría</button>
+            </form>
+        </div>
+        <div class="list-container">
+            <h2>Tutorías Sugeridas</h2>
+            <ul id="sugerenciasListadas"></ul>
+        </div>
     </main>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getFirestore, addDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDeSaRhTuUCb7u2M4zK-yY7lCCjc-AIIKw",
+            authDomain: "tutorgo-64a6f.firebaseapp.com",
+            projectId: "tutorgo-64a6f",
+            storageBucket: "tutorgo-64a6f.firebasestorage.app",
+            messagingSenderId: "108547172978",
+            appId: "1:108547172978:web:296b32fab2a6ccbd44f0eb",
+            measurementId: "G-YQGWDYJYJS"
+        };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
-        document.getElementById('sugerirTutoriaForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
-
-            const materia = document.getElementById('materia').value;
-            const tema = document.getElementById('tema').value;
-            const observaciones = document.getElementById('observaciones').value;
-
-            try {
-                await setDoc(doc(db, 'sugerencias', `${materia}-${tema}`), {
-                    materia: materia,
-                    tema: tema,
-                    observaciones: observaciones
-                });
-                alert('Sugerencia de tutoría enviada con éxito');
-                window.location.href = 'logeado.htm'; // Redirigir a la página de logueado
-            } catch (error) {
-                alert(error.message);
+        document.addEventListener('DOMContentLoaded', () => {
+            const userId = sessionStorage.getItem('userId');
+            if (!userId) {
+                window.location.href = 'index.html'; // Redirigir a la página de inicio si no hay sesión activa
             }
+        });
+
+        // Mostrar el nombre del usuario logueado
+        const aliasUsuario = localStorage.getItem('usuarioAlias'); // Obtener el alias
+        const userId = sessionStorage.getItem('userId'); // Obtener el ID del usuario
+        document.getElementById('usuarioNombre').textContent = `Usuario: ${aliasUsuario}`; // Mostrar el nombre
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            document.getElementById('sugerirForm').addEventListener('submit', async function(event) {
+                event.preventDefault();
+                const materia = document.getElementById('materia').value;
+                const tema = document.getElementById('tema').value;
+                const descripcion = document.getElementById('descripcion').value;
+
+                try {
+                    const docRef = await addDoc(collection(db, 'sugerencias'), {
+                        materia: materia,
+                        tema: tema,
+                        descripcion: descripcion
+                    });
+                    alert('Sugerencia registrada con éxito');
+                    document.getElementById('sugerirForm').reset();
+                    cargarSugerencias();
+                } catch (error) {
+                    console.error('Error al registrar la sugerencia:', error);
+                    alert('Error al registrar la sugerencia');
+                }
+            });
+
+            async function cargarSugerencias() {
+                const sugerenciasListadas = document.getElementById('sugerenciasListadas');
+                sugerenciasListadas.innerHTML = ''; // Limpiar contenido previo
+                const sugerenciasRef = collection(db, 'sugerencias');
+                const querySnapshot = await getDocs(sugerenciasRef);
+
+                if (querySnapshot.empty) {
+                    sugerenciasListadas.innerHTML = '<li>No hay sugerencias registradas.</li>';
+                } else {
+                    querySnapshot.forEach(doc => {
+                        const data = doc.data();
+                        const listItem = document.createElement('li');
+                        listItem.innerHTML = `
+                            <strong>Materia:</strong> ${data.materia}<br>
+                            <strong>Tema:</strong> ${data.tema}<br>
+                            <strong>Descripción:</strong> ${data.descripcion}
+                        `;
+                        listItem.addEventListener('click', function() {
+                            window.location.href = `registrar_tutoria.html?materia=${encodeURIComponent(data.materia)}&tema=${encodeURIComponent(data.tema)}&sugerenciaId=${doc.id}`;
+                        });
+                        sugerenciasListadas.appendChild(listItem);
+                    });
+                }
+            }
+
+            cargarSugerencias();
+
+            // Función para cerrar sesión
+            document.getElementById('cerrarSesion').addEventListener('click', async function() {
+                await signOut(auth);
+                sessionStorage.removeItem('userId');
+                localStorage.removeItem('usuarioAlias');
+                window.location.href = 'index.html'; // Redirigir a la página de inicio
+            });
+
+            // Prevenir acceso a las páginas protegidas desde el historial
+            window.addEventListener('popstate', function(event) {
+                if (!sessionStorage.getItem('userId')) {
+                    window.location.href = 'login.html'; // Redirigir al login si no hay sesión activa
+                }
+            });
         });
     </script>
 </body>

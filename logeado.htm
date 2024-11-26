@@ -5,18 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
     <title>TutorGo - Logueado</title>
+    <div id="usuarioNombre" style="float: left; margin-top: 10px;"></div>
+    <img src="logo.png" alt="Logo" class="logo"> <!-- Añadido el logo -->
 </head>
 <body>
     <header>
         <h1>TutorGo - Bienvenido</h1>
-        <div id="usuarioNombre" style="float: right; margin-top: 10px;"></div>
-        <nav>
+        
+        
+        <!-- Añadida la clase .Navbar -->
+        <nav class="Navbar">
             <ul>
                 <li><a href="registrar_tutoria.html">Registrar Tutoría</a></li>
                 <li><a href="ver_tutorias.html">Ver tus Tutorías</a></li>
                 <li><a href="sugerir_tutoria.html">Sugerir Tutoría</a></li>
                 <li><a href="calendario.html">Calendario</a></li>
-                <li><a href="index.html">Inicio</a></li>
+                <li><a href="#" id="cerrarSesion">Cerrar Sesión</a></li> <!-- Cambiado a "Cerrar Sesión" -->
             </ul>
         </nav>
     </header>
@@ -47,25 +51,43 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
         import { getFirestore, getDocs, collection, addDoc, doc, query, where, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyDeSaRhTuUCb7u2M4zK-yY7lCCjc-AIIKw",
+            apiKey: "YOUR_API_KEY",
             authDomain: "tutorgo-64a6f.firebaseapp.com",
             projectId: "tutorgo-64a6f",
             storageBucket: "tutorgo-64a6f.firebasestorage.app",
-            messagingSenderId: "108547172978",
-            appId: "1:108547172978:web:296b32fab2a6ccbd44f0eb",
-            measurementId: "G-YQGWDYJYJS"
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID",
+            measurementId: "YOUR_MEASUREMENT_ID"
         };
 
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
+
+        // Verificar si el usuario está logueado
+        document.addEventListener('DOMContentLoaded', () => {
+            const userId = sessionStorage.getItem('userId');
+            if (!userId) {
+                window.location.href = 'index.html'; // Redirigir a la página de inicio si no hay sesión activa
+            }
+        });
 
         // Mostrar el nombre del usuario logueado
         const aliasUsuario = localStorage.getItem('usuarioAlias'); // Obtener el alias
         const userId = sessionStorage.getItem('userId'); // Obtener el ID del usuario
         document.getElementById('usuarioNombre').textContent = `Usuario: ${aliasUsuario}`; // Mostrar el nombre
+
+        // Función para cerrar sesión
+        document.getElementById('cerrarSesion').addEventListener('click', async function() {
+            await signOut(auth);
+            sessionStorage.removeItem('userId');
+            localStorage.removeItem('usuarioAlias');
+            window.location.href = 'index.html'; // Redirigir a la página de inicio
+        });
 
         async function cargarTutorias() {
             try {
