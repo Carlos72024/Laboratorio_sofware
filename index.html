@@ -10,62 +10,65 @@
 <body>
     <header>
         <h1>TutorGo</h1>
-       
         <nav class="Navbar">
             <ul>
                 <li><a href="login.html">Iniciar sesión</a></li>
                 <li><a href="registro.html">Registrarse</a></li>
- 
-
             </ul>
         </nav>
     </header>
     <main>
-        <section class="content-section">
-            <h2>Misión</h2>
-            <p>
-                Facilitar el acceso a una educación personalizada mediante tutorías de alta calidad, promoviendo el crecimiento académico y personal de los estudiantes a través de tecnología accesible y eficiente.
-            </p>
-        </section>
-        <section class="content-section">
-            <h2>Visión</h2>
-            <p>
-                Ser la plataforma líder en tutorías personalizadas a nivel mundial, reconocida por su impacto positivo en el aprendizaje, la inclusión educativa y la formación de una comunidad global de tutores y estudiantes.
-            </p>
-        </section>
-        <section class="content-section">
-            <h2>Contacto</h2>
-            <div class="contact-info">
-                <div>
-                    <i class="fas fa-envelope"></i>
-                    <p>Email: <a href="mailto:contacto@tutorgo.com">contacto@tutorgo.com</a></p>
+        <div class="slider">
+            <div class="slides">
+                <div class="slide">
+                    <p class="slide-text">Convierte tu pasión en propósito. Sé tutor y marca la diferencia en la vida de alguien</p>
+                    <img src="imagindex1.png" alt="Imagen 1">
                 </div>
-                <div>
-                    <i class="fas fa-phone"></i>
-                    <p>Teléfono: <a href="tel:+123456789">+1 234 567 89</a></p>
+                <div class="slide">
+                    <p class="slide-text">Aprender es un viaje que se disfruta más en compañía. Únete a nuestra comunidad y comparte tu travesía</p>
+                    <img src="imagindex2.png" alt="Imagen 2">
                 </div>
-                <div>
-                    <i class="fas fa-map-marker-alt"></i>
-                    <p>Dirección: Calle 123, Ciudad, País</p>
+                <div class="slide">
+                    <p class="slide-text">Juntos crecemos, juntos aprendemos. Únete a nuestra comunidad de tutores y estudiantes</p>
+                    <img src="imagindex3.png" alt="Imagen 3">
                 </div>
             </div>
-        </section>
+            <a class="prev" onclick="changeSlide(-1)">&#10094;</a>
+            <a class="next" onclick="changeSlide(1)">&#10095;</a>
+        </div>
     </main>
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    <script>
+        let slideIndex = 0;
+        let slideInterval;
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDeSaRhTuUCb7u2M4zK-yY7lCCjc-AIIKw",
-            authDomain: "tutorgo-64a6f.firebaseapp.com",
-            projectId: "tutorgo-64a6f",
-            storageBucket: "tutorgo-64a6f.firebasestorage.app",
-            messagingSenderId: "108547172978",
-            appId: "1:108547172978:web:296b32fab2a6ccbd44f0eb",
-            measurementId: "G-YQGWDYJYJS"
-        };
+        function showSlides() {
+            let i;
+            const slides = document.getElementsByClassName("slide");
+            for (i = 0; i < slides.length; i++) {
+                slides[i].style.display = "none";
+            }
+            slideIndex++;
+            if (slideIndex > slides.length) {slideIndex = 1}
+            slides[slideIndex - 1].style.display = "block";
+            slideInterval = setTimeout(showSlides, 5000); // Cambia imagen cada 10 segundos
+        }
 
-        const app = initializeApp(firebaseConfig);
+        function changeSlide(n) {
+            clearTimeout(slideInterval); // Detener el cambio automático
+            slideIndex += n;
+            const slides = document.getElementsByClassName("slide");
+            if (slideIndex > slides.length) {slideIndex = 1}
+            if (slideIndex < 1) {slideIndex = slides.length}
+            for (let i = 0; i < slides.length; i++) {
+                slides[i].style.display = "none";
+            }
+            slides[slideIndex - 1].style.display = "block";
+            slideInterval = setTimeout(showSlides, 10000); // Reiniciar el cambio automático
+        }
+
+        document.addEventListener("DOMContentLoaded", showSlides);
     </script>
 </body>
 </html>
+
