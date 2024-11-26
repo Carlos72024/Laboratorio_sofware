@@ -236,9 +236,11 @@ tr:hover td {
 
 /* Logo */
 img.logo { 
-    width: 105px; /* Ajuste de tamaño de imagen */
+    width: 8.3%; /* Ajuste de tamaño de imagen */
     height: auto;
-    margin-top: 10px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    margin-right: 10px;
     float: right;
 }
 
