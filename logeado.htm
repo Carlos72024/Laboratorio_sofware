@@ -128,18 +128,31 @@
         async function agregarTutoria(docId) {
             const docRef = doc(db, 'tutorias', docId);
             const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
+            if (docSnap.exists())
+            {
                 const data = docSnap.data();
+                 // Formatear la fecha de inscripción
+                const fechaInscripcion = new Date().toLocaleDateString('es-ES', {
+                     year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                });
                 await addDoc(collection(db, 'tutoriasInscritas'), {
                     userId: userId, // Guardar el ID del usuario
                     tutoriaId: docId, // Guardar el ID de la tutoría
                     materia: data.materia,
                     tema: data.tema,
-                    tutor: aliasUsuario, // Guardar el alias del usuario
-                    fechaInscripcion: new Date().toISOString() // Fecha de inscripción
-                });
-            }
+                    fecha: data.fecha, // Agregar la fecha
+                    hora: data.hora, // Agregar la hora
+                    lugar: data.lugar, // Agregar el lugar
+                    observaciones: data.observaciones, // Agregar las observaciones
+                    tutor: data.tutor, // Guardar la información del campo tutor
+                    fechaInscripcion: fechaInscripcion // Fecha de inscripción formateada
+                    });
+                }
         }
+
+
 
         document.getElementById('agregarTutorias').addEventListener('click', async function() {
             const checkboxes = document.querySelectorAll('#tutoriasDisponibles input[type="checkbox"]:checked');

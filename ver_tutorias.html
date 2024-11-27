@@ -40,6 +40,7 @@
                         <th>Lugar</th>
                         <th>Observaciones</th>
                         <th>Participante</th>
+                        <th>Fecha inscripción</th>
                     </tr>
                 </thead>
                 <tbody id="tutoriasListadas"></tbody>
@@ -57,6 +58,7 @@
                 <p id="totalParticipantes"></p>
             </div>
         </div>
+        
     </main>
 
     <script type="module">
@@ -126,11 +128,12 @@
                             <td><input type="checkbox" value="${doc.id}" /></td>
                             <td>${data.materia}</td>
                             <td>${data.tema}</td>
-                            <td>${data.fechaInscripcion}</td>
+                            <td>${data.fecha}</td>
                             <td>${data.hora}</td>
                             <td>${data.lugar}</td>
                             <td>${data.observaciones}</td>
                             <td>${data.tutor}</td>
+                            <td>${data.fechaInscripcion}</td>
                         `;
                         listaTutorias.appendChild(row);
 
