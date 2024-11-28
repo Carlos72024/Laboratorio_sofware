@@ -39,8 +39,8 @@
                         <th>Hora</th>
                         <th>Lugar</th>
                         <th>Observaciones</th>
-                        <th>Participante</th>
-                        <th>Fecha inscripción</th>
+                        <th>Tutor</th>
+                        <th>Participantes</th> <!-- Nueva columna -->
                     </tr>
                 </thead>
                 <tbody id="tutoriasListadas"></tbody>
@@ -49,16 +49,6 @@
         <div class="button-container">
             <button id="eliminarTutorias" class="button-outside">Eliminar Tutorías Seleccionadas</button>
         </div>
-
-        <!-- Cuadro Modal -->
-        <div id="modalParticipantes" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <h2>Participantes Inscritos</h2>
-                <p id="totalParticipantes"></p>
-            </div>
-        </div>
-        
     </main>
 
     <script type="module">
@@ -118,10 +108,15 @@
                 console.log("Query Snapshot:", querySnapshot); // Agregado para depuración
 
                 if (querySnapshot.empty) {
-                    listaTutorias.innerHTML = '<tr><td colspan="8">No tienes tutorías registradas.</td></tr>';
+                    listaTutorias.innerHTML = '<tr><td colspan="9">No tienes tutorías registradas.</td></tr>';
                 } else {
-                    querySnapshot.forEach(doc => {
+                    for (const doc of querySnapshot.docs) {
                         const data = doc.data();
+                        // Consultar el número de participantes inscritos
+                        const inscritosRef = query(collection(db, 'tutoriasInscritas'), where('tutoriaId', '==', doc.id));
+                        const inscritosSnapshot = await getDocs(inscritosRef);
+                        const numParticipantes = inscritosSnapshot.size;
+
                         const row = document.createElement('tr');
                         row.setAttribute('data-id', doc.id);
                         row.innerHTML = `
@@ -133,31 +128,16 @@
                             <td>${data.lugar}</td>
                             <td>${data.observaciones}</td>
                             <td>${data.tutor}</td>
-                            <td>${data.fechaInscripcion}</td>
+                            <td>${numParticipantes}</td> <!-- Mostrar el número de participantes -->
                         `;
                         listaTutorias.appendChild(row);
 
-                        // Añadir evento click a cada fila
-                        row.addEventListener('click', async function() {
+                        // Añadir evento click a cada fila para redirigir a la nueva página de participantes
+                        row.addEventListener('click', function() {
                             const tutoriaId = this.getAttribute('data-id');
-                            console.log("Tutoria ID:", tutoriaId); // Debug: Ver ID de tutoría
-                            const inscritosRef = db.collection('tutoriasInscritas').where('tutoriaId', '==', tutoriaId);
-                            const inscritosSnapshot = await inscritosRef.get();
-                            console.log("Inscritos Snapshot:", inscritosSnapshot); // Debug: Ver snapshot de inscritos
-                            const totalParticipantes = document.getElementById('totalParticipantes');
-                            
-                            if (inscritosSnapshot.empty) {
-                                totalParticipantes.textContent = 'No hay participantes inscritos';
-                            } else {
-                                const count = inscritosSnapshot.size;
-                                totalParticipantes.textContent = `Total de Participantes: ${count}`;
-                            }
-
-                            // Mostrar modal
-                            const modal = document.getElementById('modalParticipantes');
-                            modal.style.display = 'block';
+                            window.location.href = `participantes.html?tutoriaId=${tutoriaId}`;
                         });
-                    });
+                    }
                 }
             }
 
@@ -186,20 +166,6 @@
                     alert('Error al cerrar sesión');
                 }
             });
-
-            // Modal: cerrar al hacer clic en (x)
-            const modal = document.getElementById('modalParticipantes');
-            const span = document.getElementsByClassName('close')[0];
-            span.onclick = function() {
-                modal.style.display = "none";
-            }
-
-            // Cerrar modal al hacer clic fuera del modal
-            window.onclick = function(event) {
-                if (event.target === modal) {
-                    modal.style.display = "none";
-                }
-            }
         });
     </script>
 </body>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Participantes de la Tutoría</title>
+    <img src="logo.png" alt="Logo" class="logo">
+</head>
+<body>
+    <header>
+        <h1>Participantes de la Tutoría</h1>
+        <nav class="Navbar">
+            <ul>
+                <li><a href="logeado.htm">Inicio</a></li>
+                <li><a href="ver_tutorias.html">Ver tus Tutorías</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <div class="participantes-container">
+            <h2>Lista de Participantes</h2>
+            <label for="codigoTutoria">Código Tutoría:</label>
+            <input type="text" id="codigoTutoria" name="codigoTutoria" readonly>
+            <ul id="listaParticipantes"></ul>
+        </div>
+    </main>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getFirestore, getDocs, collection, query, where, getDoc, doc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDeSaRhTuUCb7u2M4zK-yY7lCCjc-AIIKw",
+            authDomain: "tutorgo-64a6f.firebaseapp.com",
+            projectId: "tutorgo-64a6f",
+            storageBucket: "tutorgo-64a6f.firebasestorage.app",
+            messagingSenderId: "108547172978",
+            appId: "1:108547172978:web:296b32fab2a6ccbd44f0eb",
+            measurementId: "G-YQGWDYJYJS"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tutoriaId = urlParams.get('tutoriaId');
+
+            if (!tutoriaId) {
+                alert('ID de tutoría no proporcionado');
+                return;
+            }
+
+            // Asignar el tutoriaId al campo de entrada
+            document.getElementById('codigoTutoria').value = tutoriaId;
+
+            const listaParticipantes = document.getElementById('listaParticipantes');
+            const userIds = []; // Lista para almacenar los userId
+
+            try {
+                console.log(`Buscando participantes para tutoriaId: ${tutoriaId}`);
+                const inscritosSnapshot = await getDocs(query(collection(db, 'tutoriasInscritas'), where('tutoriaId', '==', tutoriaId)));
+                console.log('InscritosSnapshot:', inscritosSnapshot);
+                for (const doc of inscritosSnapshot.docs) {
+                    const data = doc.data();
+                    const userId = data.userId;
+                    console.log('Encontrado userId:', userId);
+                    userIds.push(userId); // Añadir userId a la lista
+                }
+
+                // Ahora buscamos los datos de usuario para cada userId utilizando Promise.all
+                const userPromises = userIds.map(async (userId) => {
+                    const userDocRef = doc(db, 'usuarios', userId);
+                    const userDoc = await getDoc(userDocRef);
+                    if (userDoc.exists()) {
+                        return userDoc.data();
+                    } else {
+                        console.error('Usuario no encontrado:', userId);
+                        return null;
+                    }
+                });
+
+                const usersData = await Promise.all(userPromises);
+                usersData.forEach((userData) => {
+                    if (userData) {
+                        const li = document.createElement('li');
+                        li.textContent = `Nombre: ${userData.nombre}, Apellido: ${userData.apellido}, Email: ${userData.email}`; // Mostrar el nombre, apellido y email del usuario
+                        listaParticipantes.appendChild(li);
+                    }
+                });
+            } catch (error) {
+                console.error('Error al obtener los participantes:', error);
+            }
+        });
+    </script>
+</body>
+</html>
+
