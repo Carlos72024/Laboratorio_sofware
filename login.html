@@ -5,12 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
     <title>TutorGo - Iniciar Sesión</title>
-    <img src="logo.png" alt="Logo" class="logo"> <!-- Añadido el logo -->
+    <img src="logo.png" alt="Logo" class="logo">
 </head>
 <body>
     <header>
         <h1>TutorGo - Iniciar Sesión</h1>
-        
     </header>
     <main>
         <form id="loginForm">
@@ -20,7 +19,7 @@
             <input type="password" id="password" name="password" required>
             <button type="submit">Iniciar Sesión</button>
         </form>
-        <p>¿No tienes una cuenta? <a href="registro.html">Regístrate aquí</a></p> <!-- Enlace para registro -->
+        <p>¿No tienes una cuenta? <a href="registro.html">Regístrate aquí</a></p>
     </main>
 
     <script type="module">
@@ -51,27 +50,26 @@
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
 
-                // Guardar el ID del usuario en sessionStorage
                 sessionStorage.setItem('userId', user.uid);
 
-                // Obtener el alias del usuario desde Firestore
                 const aliasUsuario = await obtenerAliasUsuario(user.uid);
-                localStorage.setItem('usuarioAlias', aliasUsuario); // Guardar en localStorage
+                localStorage.setItem('usuarioAlias', aliasUsuario);
 
                 console.log('Alias guardado:', aliasUsuario); // Para depuración
-                window.location.href = 'logeado.htm'; // Redirigir a la página de logueado
+                window.location.href = 'logeado.htm';
             } catch (error) {
                 console.error('Error al iniciar sesión:', error.message);
-                alert('Error: ' + error.message); // Muestra el error al usuario
+                alert('Error: ' + error.message);
             }
         });
 
-        // Función para obtener el alias del usuario desde Firestore
         async function obtenerAliasUsuario(uid) {
-            const userRef = doc(db, 'usuarios', uid); // Suponiendo que tienes una colección 'usuarios'
+            const userRef = doc(db, 'usuarios', uid);
             const docSnap = await getDoc(userRef);
             if (docSnap.exists()) {
-                return docSnap.data().alias; // Cambia 'alias' por el campo correcto en tu base de datos
+                const data = docSnap.data();
+                console.log('Datos del usuario:', data);
+                return data.alias || null;
             } else {
                 console.error('No se encontró el usuario');
                 return null;

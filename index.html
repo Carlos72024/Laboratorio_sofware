@@ -4,169 +4,70 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
-    <title>TutorGo - Logueado</title>
-    <div id="usuarioNombre" style="float: left; margin-top: 10px;"></div>
+    <title>TutorGo - Página Principal</title>
     <img src="logo.png" alt="Logo" class="logo"> <!-- Añadido el logo -->
 </head>
 <body>
     <header>
-        <h1>TutorGo - Bienvenido</h1>
+        <h1>TutorGo</h1>
         <nav class="Navbar">
             <ul>
-                <li><a href="registrar_tutoria.html">Registrar Tutoría</a></li>
-                <li><a href="ver_tutorias.html">Ver tus Tutorías</a></li>
-                <li><a href="sugerir_tutoria.html">Sugerir Tutoría</a></li>
-                <li><a href="calendario.html">Calendario</a></li>
-                <li><a href="#" id="cerrarSesion">Cerrar Sesión</a></li>
+                <li><a href="login.html">Iniciar sesión</a></li>
+                <li><a href="registro.html">Registrarse</a></li>
             </ul>
         </nav>
     </header>
     <main>
-        <section>
-            <h2>Tutorías Disponibles</h2>
-            <div class="tutoria-container" id="disponiblesContainer">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Seleccionar</th>
-                            <th>Materia</th>
-                            <th>Tema</th>
-                            <th>Fecha</th>
-                            <th>Hora</th>
-                            <th>Lugar</th>
-                            <th>Observaciones</th>
-                            <th>Tutor</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tutoriasDisponibles"></tbody>
-                </table>
+        <div class="slider">
+            <div class="slides">
+                <div class="slide">
+                    <p class="slide-text">Convierte tu pasión en propósito. Sé tutor y marca la diferencia en la vida de alguien</p>
+                    <img src="imagindex1.png" alt="Imagen 1">
+                </div>
+                <div class="slide">
+                    <p class="slide-text">Aprender es un viaje que se disfruta más en compañía. Únete a nuestra comunidad y comparte tu travesía</p>
+                    <img src="imagindex2.png" alt="Imagen 2">
+                </div>
+                <div class="slide">
+                    <p class="slide-text">Juntos crecemos, juntos aprendemos. Únete a nuestra comunidad de tutores y estudiantes</p>
+                    <img src="imagindex3.png" alt="Imagen 3">
+                </div>
             </div>
-            <button id="agregarTutorias">Agregar Tutorías Seleccionadas</button>
-            <div id="confirmacion" style="color: green; display: none;">¡Tutorías guardadas con éxito!</div>
-        </section>
+            <a class="prev" onclick="changeSlide(-1)">&#10094;</a>
+            <a class="next" onclick="changeSlide(1)">&#10095;</a>
+        </div>
     </main>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+        let slideIndex = 0;
+        let slideInterval;
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-        import { getFirestore, getDocs, collection, addDoc, doc, query, where, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "tutorgo-64a6f.firebaseapp.com",
-            projectId: "tutorgo-64a6f",
-            storageBucket: "tutorgo-64a6f.firebasestorage.app",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID",
-            measurementId: "YOUR_MEASUREMENT_ID"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        // Verificar si el usuario está logueado
-        document.addEventListener('DOMContentLoaded', () => {
-            const userId = sessionStorage.getItem('userId');
-            if (!userId) {
-                window.location.href = 'index.html'; // Redirigir a la página de inicio si no hay sesión activa
+        function showSlides() {
+            let i;
+            const slides = document.getElementsByClassName("slide");
+            for (i = 0; i < slides.length; i++) {
+                slides[i].style.display = "none";
             }
-        });
-
-        // Mostrar el nombre del usuario logueado
-        const aliasUsuario = localStorage.getItem('usuarioAlias'); // Obtener el alias
-        const userId = sessionStorage.getItem('userId'); // Obtener el ID del usuario
-        document.getElementById('usuarioNombre').textContent = `Usuario: ${aliasUsuario}`; // Mostrar el nombre
-
-        // Función para cerrar sesión
-        document.getElementById('cerrarSesion').addEventListener('click', async function() {
-            await signOut(auth);
-            sessionStorage.removeItem('userId');
-            localStorage.removeItem('usuarioAlias');
-            window.location.href = 'index.html'; // Redirigir a la página de inicio
-        });
-
-        async function cargarTutorias() {
-            try {
-                const tutoriasRef = collection(db, 'tutorias');
-                const tutoriasInscritasRef = collection(db, 'tutoriasInscritas');
-                
-                // Obtener las tutorías inscritas del usuario logueado
-                const inscritasQuery = query(tutoriasInscritasRef, where('userId', '==', userId));
-                const inscritasSnapshot = await getDocs(inscritasQuery);
-                const inscritasIds = inscritasSnapshot.docs.map(doc => doc.data().tutoriaId);
-
-                const snapshot = await getDocs(tutoriasRef);
-                const listaTutorias = document.getElementById('tutoriasDisponibles');
-                listaTutorias.innerHTML = ''; // Limpiar contenido previo
-
-                snapshot.forEach(doc => {
-                    if (!inscritasIds.includes(doc.id)) {
-                        const data = doc.data();
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td><input type="checkbox" value="${doc.id}" /></td>
-                            <td>${data.materia}</td>
-                            <td>${data.tema}</td>
-                            <td>${data.fecha}</td>
-                            <td>${data.hora}</td>
-                            <td>${data.lugar}</td>
-                            <td>${data.observaciones}</td>
-                            <td>${data.tutor}</td>
-                        `;
-                        listaTutorias.appendChild(row);
-                    }
-                });
-            } catch (error) {
-                console.error('Error al cargar las tutorías:', error);
-            }
+            slideIndex++;
+            if (slideIndex > slides.length) {slideIndex = 1}
+            slides[slideIndex - 1].style.display = "block";
+            slideInterval = setTimeout(showSlides, 5000); // Cambia imagen cada 10 segundos
         }
 
-        async function agregarTutoria(docId) {
-            const docRef = doc(db, 'tutorias', docId);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                // Formatear la fecha de inscripción
-                const fechaInscripcion = new Date().toLocaleDateString('es-ES', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit'
-                });
-                await addDoc(collection(db, 'tutoriasInscritas'), {
-                    userId: userId, // Guardar el ID del usuario
-                    tutoriaId: docId, // Guardar el ID de la tutoría
-                    materia: data.materia,
-                    tema: data.tema,
-                    fecha: data.fecha, // Agregar la fecha
-                    hora: data.hora, // Agregar la hora
-                    lugar: data.lugar, // Agregar el lugar
-                    observaciones: data.observaciones, // Agregar las observaciones
-                    tutor: data.tutor, // Guardar la información del campo tutor
-                    fechaInscripcion: fechaInscripcion // Fecha de inscripción formateada
-                });
+        function changeSlide(n) {
+            clearTimeout(slideInterval); // Detener el cambio automático
+            slideIndex += n;
+            const slides = document.getElementsByClassName("slide");
+            if (slideIndex > slides.length) {slideIndex = 1}
+            if (slideIndex < 1) {slideIndex = slides.length}
+            for (let i = 0; i < slides.length; i++) {
+                slides[i].style.display = "none";
             }
+            slides[slideIndex - 1].style.display = "block";
+            slideInterval = setTimeout(showSlides, 10000); // Reiniciar el cambio automático
         }
 
-        document.getElementById('agregarTutorias').addEventListener('click', async function() {
-            const checkboxes = document.querySelectorAll('#tutoriasDisponibles input[type="checkbox"]:checked');
-            let guardadas = 0;
-            for (const checkbox of checkboxes) {
-                const docId = checkbox.value;
-                await agregarTutoria(docId);
-                guardadas++;
-            }
-            if (guardadas > 0) {
-                const confirmacion = document.getElementById('confirmacion');
-                confirmacion.style.display = 'block';
-                setTimeout(() => {
-                    confirmacion.style.display = 'none';
-                }, 3000);
-                cargarTutorias(); // Refrescar la lista de tutorías disponibles
-            }
-        });
-
-        cargarTutorias();
+        document.addEventListener("DOMContentLoaded", showSlides);
     </script>
 </body>
 </html>
