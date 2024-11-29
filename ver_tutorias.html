@@ -41,6 +41,7 @@
                         <th>Observaciones</th>
                         <th>Tutor</th>
                         <th>Participantes</th> <!-- Nueva columna -->
+                        <th>Acciones</th> <!-- Nueva columna para acciones -->
                     </tr>
                 </thead>
                 <tbody id="tutoriasListadas"></tbody>
@@ -108,7 +109,7 @@
                 console.log("Query Snapshot:", querySnapshot); // Agregado para depuración
 
                 if (querySnapshot.empty) {
-                    listaTutorias.innerHTML = '<tr><td colspan="9">No tienes tutorías registradas.</td></tr>';
+                    listaTutorias.innerHTML = '<tr><td colspan="10">No tienes tutorías registradas.</td></tr>';
                 } else {
                     for (const doc of querySnapshot.docs) {
                         const data = doc.data();
@@ -129,11 +130,13 @@
                             <td>${data.observaciones}</td>
                             <td>${data.tutor}</td>
                             <td>${numParticipantes}</td> <!-- Mostrar el número de participantes -->
+                            <td><button class="detalle-btn" data-id="${doc.id}">Ver Detalles</button></td> <!-- Botón para ver detalles -->
                         `;
                         listaTutorias.appendChild(row);
 
-                        // Añadir evento click a cada fila para redirigir a la nueva página de participantes
-                        row.addEventListener('click', function() {
+                        // Añadir evento click solo al botón de detalles
+                        row.querySelector('.detalle-btn').addEventListener('click', function(event) {
+                            event.stopPropagation(); // Evitar que el clic en la fila sea activado
                             const tutoriaId = this.getAttribute('data-id');
                             window.location.href = `participantes.html?tutoriaId=${tutoriaId}`;
                         });
